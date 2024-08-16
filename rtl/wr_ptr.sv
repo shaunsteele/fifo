@@ -9,12 +9,13 @@ module wr_ptr # (
   input var                     clk,
   input var                     rstn,
 
-  input var                     i_wen,
+  input var                     i_tvalid,
+  output var logic              o_tready,
+
   output var logic  [ALEN-1:0]  o_waddr,
   output var logic  [ALEN:0]    o_wptr,
   input var         [ALEN:0]    i_rptr,
-  output var logic              o_wfull,
-  output var logic              o_woverflow,
+
   output var logic              o_ram_wen
 );
 
@@ -33,7 +34,7 @@ end
 
 // Valid RAM Write Flag
 always_comb begin
-  o_ram_wen = i_wen & ~o_wfull;
+  o_ram_wen = i_tvalid & o_tready;
 end
 
 // Next Pointer Logic
@@ -58,32 +59,21 @@ end
 assign o_waddr = o_wptr[ALEN-1:0];
 
 // Full Latch
+logic rstn_q;
+always_ff @(posedge clk) begin
+  rstn_q <= rstn;
+end
+
 always_ff @(posedge clk) begin
   if (!rstn) begin
-    o_wfull <= 0;
+    o_tready <= 0;
   end else begin
-    if (o_wfull) begin
-      o_wfull <= i_rptr == {~o_wptr[ALEN], o_wptr[ALEN-1:0]};
-    end else if (next_wfull) begin
-      o_wfull <= i_wen;
+    if (rstn && !rstn_q) begin
+      o_tready <= 1;
     end else begin
-      o_wfull <= o_wfull;
+      o_tready <= ~next_wfull;
     end
   end
 end
-
-// Overflow Latch
-always_ff @(posedge clk) begin
-  if (!rstn) begin
-    o_woverflow <= 0;
-  end else begin
-    if (i_wen & o_wfull) begin
-      o_woverflow <= 1;
-    end else begin
-      o_woverflow <= o_woverflow;
-    end
-  end
-end
-
 
 endmodule

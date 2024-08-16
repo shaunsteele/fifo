@@ -9,12 +9,13 @@ module rd_ptr # (
   input var                     clk,
   input var                     rstn,
 
-  input var                     i_ren,
+  output var logic              o_tvalid,
+  input var                     i_tready,
+
   output var logic  [ALEN-1:0]  o_raddr,
   output var logic  [ALEN:0]    o_rptr,
   input var         [ALEN:0]    i_wptr,
-  output var logic              o_rempty,
-  output var logic              o_runderflow,
+
   output var logic              o_ram_ren
 );
 
@@ -32,7 +33,7 @@ end
 
 // Valid RAM Read Flag
 always_comb begin
-  o_ram_ren = i_ren & ~o_rempty;
+  o_ram_ren = o_tvalid & i_tready;
 end
 
 // Next Read Pointer Logic
@@ -59,25 +60,12 @@ assign o_raddr = o_rptr[ALEN-1:0];
 // Empty Logic
 always_ff @(posedge clk) begin
   if (!rstn) begin
-    o_rempty <= 1;
+    o_tvalid <= 0;
   end else begin
-    if (o_rempty) begin
-      o_rempty <= i_wptr == o_rptr;
+    if (o_tvalid) begin
+      o_tvalid <= ~next_rempty;
     end else begin
-      o_rempty <= next_rempty & i_ren;
-    end
-  end
-end
-
-// Underflow Latch
-always_ff @(posedge clk) begin
-  if (!rstn) begin
-    o_runderflow <= 0;
-  end else begin
-    if (i_ren & o_rempty) begin
-      o_runderflow <= 1;
-    end else begin
-      o_runderflow <= o_runderflow;
+      o_tvalid <= next_rempty;
     end
   end
 end

@@ -3,9 +3,8 @@ REPO_DIR := /home/shaun/repos/fifo
 
 RTL_DIR := $(REPO_DIR)/rtl
 
-SIM ?= verilator
-
-EXTRA_ARGS += --trace --trace-structs
+SIM ?= icarus
+WAVES = 1
 
 TOPLEVELLANG ?= verilog
 
@@ -15,12 +14,12 @@ VERILOG_SOURCES += $(RTL_DIR)/rd_ptr.sv
 VERILOG_SOURCES += $(RTL_DIR)/fifo.sv
 
 TOPLEVEL = fifo
+WAVEFILE = sim_build/$(TOPLEVEL).fst
 
 MODULE = tb_fifo
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
-WAVEFILE = dump.vcd
 
 .PHONY: waves
 waves:
