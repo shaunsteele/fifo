@@ -33,11 +33,11 @@ always_ff @(posedge clk) begin
   if (!rstn) begin
     o_rdata <= 0;
   end else begin
-    if (i_ren) begin
+    // if (i_ren) begin
       o_rdata <= ram[i_raddr[ALEN-1:0]];
-    end else begin
-      o_rdata <= o_rdata;
-    end
+    // end else begin
+    //   o_rdata <= o_rdata;
+    // end
   end
 end
 
