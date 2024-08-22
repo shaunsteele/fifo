@@ -24,8 +24,8 @@ async def full_test(dut, model):
     assert dut.o_wr_tready.value
     for i in range(len(model)):
         dut.i_wr_tvalid.value = 1
-        dut.i_wr_tdata.value = i
-        model[i] = i
+        dut.i_wr_tdata.value = len(model) - 1 - i
+        model[i] = len(model) - 1 - i
         await RisingEdge(dut.clk)
 
     await FallingEdge(dut.clk)
