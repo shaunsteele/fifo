@@ -19,13 +19,13 @@ async def reset_check(dut):
     cocotb.log.info("Reset Test Passed")
 
 
-async def full_test(dut, model):
+async def full_test(dut, model, os=0):
     await FallingEdge(dut.clk)
     assert dut.o_wr_tready.value
     for i in range(len(model)):
         dut.i_wr_tvalid.value = 1
-        dut.i_wr_tdata.value = len(model) - 1 - i
-        model[i] = len(model) - 1 - i
+        dut.i_wr_tdata.value = len(model) - 1 - i + os
+        model[i] = len(model) - 1 - i + os
         await RisingEdge(dut.clk)
 
     await FallingEdge(dut.clk)
@@ -41,10 +41,9 @@ async def empty_test(dut, model):
     await FallingEdge(dut.clk)
     for i in range(len(model)):
         dut.i_rd_tready.value = 1
-
+        assert dut.o_rd_tdata.value == model[i]
         await RisingEdge(dut.clk)
         await FallingEdge(dut.clk)
-        assert dut.o_rd_tdata.value == model[i]
     assert dut.o_rd_tvalid.value == 0
     cocotb.log.info("Empty Test Passed")
     dut.i_rd_tready.value = 0
@@ -71,6 +70,8 @@ async def tb_fifo(dut):
     # test cases
     await reset_check(dut)
     fifo_model = await full_test(dut, fifo_model)
+    await empty_test(dut, fifo_model)
+    fifo_model = await full_test(dut, fifo_model, 0x10)
     await empty_test(dut, fifo_model)
 
     await ClockCycles(dut.clk, 10)

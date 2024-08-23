@@ -26,12 +26,6 @@ always_comb begin
   next_wptr = o_wptr + INCR[ALEN:0];
 end
 
-// FIFO Full on next write
-logic next_wfull;
-always_comb begin
-  next_wfull = {~next_wptr[ALEN], next_wptr[ALEN-1:0]} == i_rptr;
-end
-
 // Valid RAM Write Flag
 always_comb begin
   o_ram_wen = i_tvalid & o_tready;
@@ -64,6 +58,11 @@ always_ff @(posedge clk) begin
   rstn_q <= rstn;
 end
 
+logic full;
+always_comb begin
+  full = {~wptr_d[ALEN], wptr_d[ALEN-1:0]} == i_rptr;
+end
+
 always_ff @(posedge clk) begin
   if (!rstn) begin
     o_tready <= 0;
@@ -71,7 +70,7 @@ always_ff @(posedge clk) begin
     if (rstn && !rstn_q) begin
       o_tready <= 1;
     end else begin
-      o_tready <= ~next_wfull;
+      o_tready <= ~full;
     end
   end
 end

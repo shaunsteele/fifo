@@ -3,7 +3,7 @@
 `default_nettype none
 
 module fifo # (
-  parameter int ALEN = 8,
+  parameter int ALEN = 2,
   parameter int DLEN = 8,
   parameter int INCR = 1
 )(
@@ -55,8 +55,7 @@ rd_ptr # (
   .i_tready     (i_rd_tready),
   .o_raddr      (raddr),
   .o_rptr       (rptr),
-  .i_wptr       (wptr),
-  .o_ram_ren    (ram_ren)
+  .i_wptr       (wptr)
 );
 
 /* Memory Instantiation */
@@ -69,7 +68,6 @@ sp_ram # (
   .i_wen    (ram_wen),
   .i_waddr  (waddr),
   .i_wdata  (i_wr_tdata),
-  .i_ren    (ram_ren),
   .i_raddr  (raddr),
   .o_rdata  (o_rd_tdata)
 );

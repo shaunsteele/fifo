@@ -13,7 +13,6 @@ module sp_ram # (
   input var         [ALEN-1:0]  i_waddr,
   input var         [DLEN-1:0]  i_wdata,
 
-  input var                     i_ren,
   input var         [ALEN-1:0]  i_raddr,
   output var logic  [DLEN-1:0]  o_rdata
 );
@@ -33,11 +32,7 @@ always_ff @(posedge clk) begin
   if (!rstn) begin
     o_rdata <= 0;
   end else begin
-    // if (i_ren) begin
-      o_rdata <= ram[i_raddr[ALEN-1:0]];
-    // end else begin
-    //   o_rdata <= o_rdata;
-    // end
+    o_rdata <= ram[i_raddr[ALEN-1:0]];
   end
 end
 
