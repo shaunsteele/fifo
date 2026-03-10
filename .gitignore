@@ -12,3 +12,5 @@
 **/.archive
 **/archive_*
 *.gtkw
+**/obj_dir
+*.dat

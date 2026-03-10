@@ -3,74 +3,64 @@
 `default_nettype none
 
 module fifo # (
-  parameter int ALEN = 2,
-  parameter int DLEN = 8,
-  parameter int INCR = 1
+    parameter int DATA_WIDTH = 8,
+    parameter int ADDR_WIDTH = 4
 )(
-  input var                     clk,
-  input var                     rstn,
+    input   var logic                       clk,
+    input   var logic                       rst_n,
 
-  // AXI Stream Write Port
-  input var                     i_wr_tvalid,
-  output var                    o_wr_tready,
-  input var         [DLEN-1:0]  i_wr_tdata,
+    // read interface
+    input   var logic                       i_re,
+    output  var logic   [DATA_WIDTH-1:0]    o_rdata,
+    output  var logic                       o_rempty,
 
-  // AXI Stream Read Port
-  output var logic              o_rd_tvalid,
-  input var                     i_rd_tready,
-  output var logic  [DLEN-1:0]  o_rd_tdata
+    // write interface
+    input   var logic                       i_we,
+    input   var logic   [DATA_WIDTH-1:0]    i_wdata,
+    output  var logic                       o_wfull
 );
 
-/* Pointer Instantiations */
-logic [ALEN-1:0]  waddr;
-logic [ALEN:0]    wptr;
-logic [ALEN-1:0]  raddr;
-logic [ALEN:0]    rptr;
 
-// Write Pointer
-logic ram_wen;
-wr_ptr # (
-  .ALEN (ALEN),
-  .INCR (INCR)
-) u_WR (
-  .clk          (clk),
-  .rstn         (rstn),
-  .i_tvalid     (i_wr_tvalid),
-  .o_tready     (o_wr_tready),
-  .o_waddr      (waddr),
-  .o_wptr       (wptr),
-  .i_rptr       (rptr),
-  .o_ram_wen    (ram_wen)
+logic [ADDR_WIDTH-1:0]  waddr;
+logic [ADDR_WIDTH-1:0]  raddr;
+
+
+// write enable without overwrite
+logic we;
+logic full;
+
+always_comb begin
+    we = i_we & ~full;
+end
+
+assign o_wfull = full;
+
+
+// module instantiations
+fifo_ctrl # (
+    .ADDR_WIDTH (ADDR_WIDTH)
+) u_FC (
+    .clk        (clk),
+    .rst_n      (rst_n),
+    .i_re       (i_re),
+    .o_raddr    (raddr),
+    .o_rempty   (o_rempty),
+    .i_we       (we),
+    .o_waddr    (waddr),
+    .o_wfull    (full)
 );
 
-// Read Pointer
-logic ram_ren;
-rd_ptr # (
-  .ALEN (ALEN),
-  .INCR (INCR)
-) u_RD (
-  .clk          (clk),
-  .rstn         (rstn),
-  .o_tvalid     (o_rd_tvalid),
-  .i_tready     (i_rd_tready),
-  .o_raddr      (raddr),
-  .o_rptr       (rptr),
-  .i_wptr       (wptr)
+bram_sdp # (
+    .DATA_WIDTH (DATA_WIDTH),
+    .ADDR_WIDTH (ADDR_WIDTH)
+) u_BRAM (
+    .clk        (clk),
+    .rst_n      (rst_n),
+    .i_we       (we),
+    .i_waddr    (waddr),
+    .i_wdata    (i_wdata),
+    .i_raddr    (raddr),
+    .o_rdata    (o_rdata)
 );
-
-/* Memory Instantiation */
-sp_ram # (
-  .DLEN (DLEN),
-  .ALEN (ALEN)
-) u_RAM (
-  .clk      (clk),
-  .rstn     (rstn),
-  .i_wen    (ram_wen),
-  .i_waddr  (waddr),
-  .i_wdata  (i_wr_tdata),
-  .i_raddr  (raddr),
-  .o_rdata  (o_rd_tdata)
-);
-
 
 endmodule
